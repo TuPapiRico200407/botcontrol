@@ -1,0 +1,6 @@
+name = "botcontrol-api-worker"
+main = "src/index.ts"
+compatibility_date = "2024-05-29"
+
+# [vars]
+# Add non-secret configs here

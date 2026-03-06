@@ -1,0 +1,4 @@
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_ANON_KEY=your-local-anon-key
+JWT_SECRET=your-local-jwt-secret
+CEREBRAS_API_KEY=your-cerebras-key

@@ -171,7 +171,7 @@ export const webhookReceiveHandler = async (c: any) => {
                 let convId: string;
                 const { data: existingConv } = await supabase
                     .from('conversations')
-                    .select('id')
+                    .select('id, state')
                     .eq('channel_id', channel.id)
                     .eq('phone_number', msg.from)
                     .single();
@@ -197,7 +197,9 @@ export const webhookReceiveHandler = async (c: any) => {
                     convId = newConv.id;
                 }
 
-                // Extract message content
+                let bodyText = '';
+                if (msg.text?.body) bodyText = msg.text.body;
+
                 const body = msg.text?.body ||
                     (msg.image ? '[image]' : null) ||
                     (msg.audio ? '[audio]' : null) ||
@@ -206,6 +208,20 @@ export const webhookReceiveHandler = async (c: any) => {
 
                 const mediaUrl = msg.image?.id || msg.audio?.id || msg.document?.id || null;
                 const mediaMimeType = msg.image?.mime_type || msg.audio?.mime_type || msg.document?.mime_type || null;
+
+                // Simple Handoff logic (Sprint 3)
+                const isHandoffRequest = bodyText.toLowerCase().includes('humano') || bodyText.toLowerCase().includes('asesor');
+                let newState = existingConv ? undefined : 'BOT';
+
+                if (isHandoffRequest) {
+                    newState = 'PENDING';
+                    // Si ya existe la charla y pedimos handoff, lo marcamos PENDING inmediatamente
+                    if (existingConv) {
+                        await supabase.from('conversations')
+                            .update({ state: 'PENDING', updated_at: new Date().toISOString() })
+                            .eq('id', convId);
+                    }
+                }
 
                 // Insert message
                 const { error: msgErr } = await supabase.from('messages').insert({
@@ -223,7 +239,46 @@ export const webhookReceiveHandler = async (c: any) => {
 
                 if (msgErr) {
                     console.error('Failed to insert message:', msgErr);
+                    continue;
                 }
+
+                // --- SPRINT 4: Media Jobs ---
+                if (mediaUrl) {
+                    const { error: jobErr } = await supabase.from('media_jobs').insert({
+                        org_id: channel.org_id,
+                        message_id: msg.id, // Using the webhook's msg ID
+                        media_url: mediaUrl,
+                        media_type: msg.type,
+                        status: 'QUEUED'
+                    });
+                    if (jobErr) console.error('Failed to queue media job:', jobErr);
+                }
+
+                // --- SPRINT 4: AI Auto-reply (Cerebras Mock) ---
+                const finalState = newState || existingConv?.state || 'BOT';
+
+                if (finalState === 'BOT' && !isHandoffRequest) {
+                    // Simular latencia de Cerebras
+                    const mockLatency = Math.floor(Math.random() * 1000) + 500;
+                    const aiResponseText = `[AI Auto-reply] ¡Hola! He procesado tu mensaje ("${bodyText || msg.type}"). ¿En qué más puedo ayudarte?`;
+
+                    // Insertar la respuesta generada
+                    await supabase.from('messages').insert({
+                        conversation_id: convId,
+                        org_id: channel.org_id,
+                        message_id: 'mock-ai-' + Date.now(),
+                        webhook_timestamp: Date.now() + mockLatency,
+                        direction: 'outbound',
+                        message_type: 'text',
+                        body: aiResponseText,
+                        ia_tokens_used: 120, // Simulando métricas IA
+                        processed_at: new Date().toISOString(),
+                    });
+
+                    // (Optional) Aquí llamarías a la Graph API de WA de forma asíncrona usando c.executionCtx.waitUntil
+                    // para despachar el mensaje al número real.
+                }
+
             }
         }
     }

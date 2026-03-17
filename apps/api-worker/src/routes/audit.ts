@@ -1,7 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { ApiError } from '../../utils/errors';
-import { AuthContext } from '../../middleware/auth';
+import { ApiError } from '../utils/errors';
+import { AuthContext } from '../middleware/auth';
 
 /**
  * GET /api/orgs/:orgId/audit

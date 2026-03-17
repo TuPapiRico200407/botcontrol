@@ -13,3 +13,9 @@ export { AppShell } from './AppShell';
 export { FormField } from './FormField';
 export { Card } from './Card';
 export * from './tokens';
+
+export * from './ConversationList';
+export * from './ChatTimeline';
+export * from './ChannelForm';
+export * from './MessageComposer';
+export * from './ContextSidebar';

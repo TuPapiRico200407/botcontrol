@@ -229,3 +229,99 @@ SELECT
     now() - interval '2 minutes'
 FROM organizations WHERE slug = 'acme-inc'
 ON CONFLICT DO NOTHING;
+
+-- ============================================================
+-- SPRINT 03 SEED DATA
+-- Asignación humana, tags, notas
+-- ============================================================
+
+-- En vez de update que puede fallar por dependencies previas, la migracion aplica:
+-- Nota a la conversación 991e8400- (HUMAN)
+INSERT INTO conversation_tags (
+    id, org_id, conversation_id, tag_name, created_by
+)
+SELECT
+    'bb1e8400-e29b-41d4-a716-446655440001'::uuid,
+    organizations.id,
+    '991e8400-e29b-41d4-a716-446655440001'::uuid,
+    'VIP',
+    users.id
+FROM organizations
+CROSS JOIN auth.users
+WHERE organizations.slug = 'acme-inc' AND users.email = 'agent_demo_sprint03@acme.com'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO conversation_notes (
+    id, org_id, conversation_id, author_id, content
+)
+SELECT
+    'bb2e8400-e29b-41d4-a716-446655440001'::uuid,
+    organizations.id,
+    '991e8400-e29b-41d4-a716-446655440001'::uuid,
+    users.id,
+    'El cliente está molesto por el tiempo de espera. Reviso yo.'
+FROM organizations
+CROSS JOIN auth.users
+WHERE organizations.slug = 'acme-inc' AND users.email = 'agent_demo_sprint03@acme.com'
+ON CONFLICT DO NOTHING;
+
+-- ============================================================
+-- SPRINT 04 SEED DATA
+-- IA Auto-reply, Media & Health
+-- ============================================================
+
+-- 1) Seed Media Jobs
+INSERT INTO media_jobs (
+    id, org_id, message_id, media_url, media_type, status, result_text
+)
+SELECT
+    'cc1e8400-e29b-41d4-a716-446655440001'::uuid,
+    organizations.id,
+    'aa2e8400-e29b-41d4-a716-446655440001'::uuid, -- wamid.demo.002
+    'https://files.acme.inc/audio_01.ogg',
+    'audio',
+    'DONE',
+    'Me pueden mandar el catálogo de productos.'
+FROM organizations
+WHERE slug = 'acme-inc'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO media_jobs (
+    id, org_id, message_id, media_url, media_type, status, error_message
+)
+SELECT
+    'cc2e8400-e29b-41d4-a716-446655440002'::uuid,
+    organizations.id,
+    'aa3e8400-e29b-41d4-a716-446655440001'::uuid, -- wamid.demo.003
+    'https://files.acme.inc/broken_img.jpg',
+    'image',
+    'FAILED',
+    'Timeout extracting text via OCR.'
+FROM organizations
+WHERE slug = 'acme-inc'
+ON CONFLICT DO NOTHING;
+
+-- 2) Seed Health Logs
+INSERT INTO system_health_logs (
+    org_id, component, status, message, details
+)
+SELECT
+    id,
+    'CEREBRAS_AI',
+    'WARNING',
+    'Rate limit near threshold',
+    '{"limit": 500, "current": 490}'::jsonb
+FROM organizations
+WHERE slug = 'acme-inc';
+
+INSERT INTO system_health_logs (
+    org_id, component, status, message, details
+)
+SELECT
+    id,
+    'WEBHOOK',
+    'ERROR',
+    'Signature verification failed',
+    '{"ip": "192.168.1.100"}'::jsonb
+FROM organizations
+WHERE slug = 'acme-inc';

@@ -1,6 +1,6 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { ApiError } from '../../utils/errors';
+import { ApiError } from '../utils/errors';
 
 /**
  * POST /auth/login

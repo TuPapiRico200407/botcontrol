@@ -11,6 +11,19 @@ import { listOrgsHandler, listOrgsRoute, createOrgHandler, createOrgRoute, getOr
 import { listMembersHandler, listMembersRoute, inviteMemberHandler, inviteMemberRoute, updateMemberHandler, updateMemberRoute } from './routes/members';
 import { getBotHandler, getBotRoute, updateBotHandler, updateBotRoute } from './routes/bot';
 import { auditLogsHandler, auditLogsRoute } from './routes/audit';
+import { webhookVerifyRoute, webhookVerifyHandler, webhookReceiveRoute, webhookReceiveHandler } from './routes/webhook';
+import { listChannelsRoute, listChannelsHandler, createChannelRoute, createChannelHandler, deleteChannelRoute, deleteChannelHandler } from './routes/whatsapp';
+import { listInboxRoute, listInboxHandler, listMessagesRoute, listMessagesHandler, updateConvStateRoute, updateConvStateHandler } from './routes/inbox';
+import {
+    takeConvRoute, takeConvHandler, releaseConvRoute, releaseConvHandler,
+    sendOutboundRoute, sendOutboundHandler,
+    addTagRoute, addTagHandler, removeTagRoute, removeTagHandler,
+    addNoteRoute, addNoteHandler, listNotesRoute, listNotesHandler,
+    listTagsRoute, listTagsHandler
+} from './routes/conversations';
+import advancedBotLogs from './routes/bot_advanced';
+import mediaRouter from './routes/media';
+import healthRouter from './routes/health';
 
 type Bindings = {
     SUPABASE_URL: string;
@@ -58,6 +71,10 @@ app.doc('/openapi.json', {
 });
 app.get('/swagger', swaggerUI({ url: '/openapi.json' }));
 
+// Webhook (public)
+app.openapi(webhookVerifyRoute, webhookVerifyHandler);
+app.openapi(webhookReceiveRoute, webhookReceiveHandler);
+
 // Login (public)
 app.openapi(loginRoute, loginHandler);
 
@@ -88,6 +105,31 @@ app.openapi(updateBotRoute, updateBotHandler);
 
 // Audit Logs
 app.openapi(auditLogsRoute, auditLogsHandler);
+
+// WhatsApp Channels
+app.openapi(listChannelsRoute, listChannelsHandler);
+app.openapi(createChannelRoute, createChannelHandler);
+app.openapi(deleteChannelRoute, deleteChannelHandler);
+
+// Inbox
+app.openapi(listInboxRoute, listInboxHandler);
+app.openapi(listMessagesRoute, listMessagesHandler);
+app.openapi(updateConvStateRoute, updateConvStateHandler);
+
+// Conversations (Take, Release, Outbound, Tags, Notes)
+app.openapi(takeConvRoute, takeConvHandler);
+app.openapi(releaseConvRoute, releaseConvHandler);
+app.openapi(sendOutboundRoute, sendOutboundHandler);
+app.openapi(addTagRoute, addTagHandler);
+app.openapi(removeTagRoute, removeTagHandler);
+app.openapi(addNoteRoute, addNoteHandler);
+app.openapi(listNotesRoute, listNotesHandler);
+app.openapi(listTagsRoute, listTagsHandler);
+
+// Sprint 4 Routes (Non-OpenAPI for simplicity)
+app.route('/api/orgs/:orgId/bot', advancedBotLogs);
+app.route('/api/media', mediaRouter);
+app.route('/api/health', healthRouter);
 
 // ===== ERROR HANDLING =====
 

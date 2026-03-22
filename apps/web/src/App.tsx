@@ -1,17 +1,22 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { OrgHomePage } from './pages/OrgHomePage';
 
+const RootRedirect = () => {
+    const location = useLocation();
+    return <Navigate to={{ pathname: "/login", hash: location.hash }} replace />;
+};
+
 export function App() {
     return (
         <AuthProvider>
             <BrowserRouter>
                 <Routes>
-                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route path="/" element={<RootRedirect />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route
                         path="/admin"

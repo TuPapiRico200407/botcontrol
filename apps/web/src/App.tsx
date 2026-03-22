@@ -30,8 +30,14 @@ export function App() {
                         }
                     />
                     <Route path="/unauthorized" element={
-                        <div className="flex h-screen items-center justify-center text-gray-600">
-                            403 — You are not authorized to access this page.
+                        <div className="flex flex-col h-screen items-center justify-center text-gray-400 bg-[#0A0D14]">
+                            <div className="text-xl mb-4">403 — You are not authorized to access this page.</div>
+                            <button 
+                                onClick={() => { localStorage.clear(); window.location.href = '/login'; }}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                            >
+                                Sign Out & Try Again
+                            </button>
                         </div>
                     } />
                 </Routes>
